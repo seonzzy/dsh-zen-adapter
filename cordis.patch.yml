@@ -1,0 +1,9 @@
+# Register the OpenCode Zen free-lane adapter.
+#
+# One provider id, served by a native `LlmAdapter` that reuses the HOST's
+# `@deepseek-ai/dsh-llm-pi-ai` (and therefore the host's pi-ai). Declaring
+# pi-ai as our own dependency would install a second copy, which is exactly
+# what dsh-workbuddy-xdpool rejects at the adapter seam.
+- insert:
+    - id: llm-zen-adapter
+      name: dsh-zen-adapter

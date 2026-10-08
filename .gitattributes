@@ -1,0 +1,18 @@
+# Keep line endings LF in the repository on every platform.
+#
+# Without this, Windows clones rewrite the working tree to CRLF and every
+# subsequent diff shows whole-file churn. The plugin is plain JS that the DSH
+# host loads directly, so a stable byte-for-byte checkout is what makes
+# "the shipped file" and "the reviewed file" the same thing.
+* text=auto eol=lf
+
+# Images and archives must never be line-ending converted.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.webp binary
+*.ico binary
+*.tgz binary
+*.gz binary
+*.zip binary

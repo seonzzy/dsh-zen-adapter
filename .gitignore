@@ -1,0 +1,34 @@
+# Dependencies
+#
+# This is the guardrail for the plugin's core design property: it must ship NO
+# dependencies, so that the host's pi-ai is the only pi-ai on the machine.
+# If a node_modules/ ever appeared in the repository, a fresh
+# `dsh plugin add` would install a vendored second copy of @earendil-works/pi-ai,
+# which is exactly the pi-ai generation mismatch that breaks
+# dsh-workbuddy-xdpool (see README).
+node_modules/
+.pnpm-store/
+
+# Logs and debug output
+*.log
+npm-debug.log*
+pnpm-debug.log*
+yarn-error.log*
+
+# Local environment and credentials — never commit these.
+.env
+.env.*
+!.env.example
+
+# Editor and OS noise
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json
+*.swp
+
+# Test and build scratch
+coverage/
+*.tsbuildinfo
+dist/
