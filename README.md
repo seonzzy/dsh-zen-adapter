@@ -5,7 +5,7 @@
 
 无需注册、无需 API key、无需额外进程。
 
-**English** | 简体中文
+[English](README.en.md) | 简体中文
 
 ---
 
