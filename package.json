@@ -1,6 +1,6 @@
 {
   "name": "dsh-zen-adapter",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "private": false,
   "type": "module",
   "description": "OpenCode Zen free models as a native DeepSeek Harness LLM provider, with a live catalog discovered from the Zen gateway and models.dev.",

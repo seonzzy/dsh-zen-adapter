@@ -5,6 +5,55 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.0] - 2026-10-16
+
+### Fixed
+
+- **Every chat turn failed with `Cannot read properties of undefined
+  (reading 'apiKey')` (PI_AI_ERROR), while the availability probe kept
+  reporting models as reachable.** The provider was built without an auth
+  plane, so pi-ai dereferenced `provider.auth.apiKey` on the first request and
+  threw before anything reached the network — which is exactly why the probe,
+  which speaks HTTP directly rather than through pi-ai, still looked healthy.
+
+  The provider now carries a placeholder api-key method that satisfies pi-ai's
+  resolution path, and the adapter's credential seam returns `undefined` rather
+  than `''` so the request-level override is omitted entirely. The lane remains
+  anonymous: no credential is sent, and `Authorization` is suppressed explicitly
+  rather than filled with a placeholder value.
+
+- **The catalog re-downloaded 5.69 MB on every catalogue build.** models.dev
+  answers with a single document covering every provider it knows, of which this
+  plugin reads one section. It is now cached on disk with its own TTL, and the
+  previously declared-but-unused `METADATA_TTL_MS` (24 hours) is what actually
+  governs it — the on-sale list keeps the shorter 5-minute TTL, because a new
+  model should appear in the picker promptly.
+
+  Startup no longer waits for that download, an offline start still gets a full
+  list, and the refresh button still forces a real round trip instead of being
+  answered from cache.
+
+### Changed
+
+- The upstream endpoint is `https://opencode.ai/inference/v1`; the previously
+  used `/zen/v1` path is retired. The request shape that the lane accepts is
+  now centralised in `lib/upstream.js`.
+
+### Notes
+
+- Verified against the live lane with the plugin's own code path
+  (`ZenCatalogService.probeAll()`): 8 of 12 advertised free models answer,
+  including multi-turn recall. The remaining failures are upstream-side and are
+  expected — `cat-jam-free` and `muse-spark-1.3-contributor-free` are
+  region-blocked (`403 RegionError`), `jev-1.13-free` is
+  `400 ModelProtocolUnsupported`.
+- Cache location is `~/.cache/dsh-zen-adapter/catalog.db`, following the same
+  convention as `dsh-free-search`. Delete that directory to clear it; nothing
+  else is left behind. `ZEN_CACHE_DIR` relocates it.
+- The free lane is undocumented upstream behaviour and may change without
+  notice. If every model starts returning `403`, the gate has moved — the
+  availability button is the early warning for that.
+
 ## [0.1.1] - 2026-10-13
 
 ### Fixed
@@ -86,5 +135,6 @@ Initial release.
   `llm.registerAdapter()` is all-or-nothing and a second claimant of an
   existing provider id throws `DUPLICATE_ADAPTER`.
 
+[0.2.0]: https://github.com/seonzzy/dsh-zen-adapter/releases/tag/v0.2.0
 [0.1.1]: https://github.com/seonzzy/dsh-zen-adapter/releases/tag/v0.1.1
 [0.1.0]: https://github.com/seonzzy/dsh-zen-adapter/releases/tag/v0.1.0

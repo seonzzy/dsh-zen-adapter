@@ -75,10 +75,10 @@ The plugin reads two upstream sources and combines them:
 
 | Source | Provides | Does not provide |
 | --- | --- | --- |
-| `opencode.ai/zen/v1/models` | Ids of models currently **on sale** | Pricing, context size |
+| `opencode.ai/inference/v1/models` | Ids of models currently **on sale** | Pricing, context size |
 | `models.dev/api.json` | `cost`, `limit.context`, `limit.output` | Whether a model is on sale |
 
-The second source is mandatory — Zen's `/v1/models` only returns
+The second source is mandatory — upstream's `/v1/models` only returns
 `{ id, object, created, owned_by }`, so **there is no way to tell from it whether a model is
 free**.
 
@@ -89,6 +89,26 @@ metadata is missing, which normally happens for freshly released models.
 
 Context sizes and output limits also come from models.dev, so the values shown in the panel are
 real numbers rather than a fixed constant.
+
+### Catalog caching
+
+The two sources are not equally volatile, so they are not cached for the same length of time:
+
+| Data | Cached for | Why |
+| --- | --- | --- |
+| On-sale model list | 5 minutes | A new model should reach the picker promptly |
+| models.dev pricing and limits | 24 hours | It rarely changes; recomputing it within a day buys nothing |
+
+The cache lives in `~/.cache/dsh-zen-adapter/catalog.db`, following the same location
+convention as `dsh-free-search`. Delete that directory to clear it — nothing else is left
+behind. Set `ZEN_CACHE_DIR` to relocate it.
+
+Three things this buys in practice:
+
+- **Faster startup** — no longer waits on models.dev's document covering every provider
+- **Works offline** — starting with no network still yields a complete model list
+- **Fetch models still really fetches** — that button bypasses the cache and talks to
+  upstream, so it cannot be answered from a stale cache
 
 ## Why zero dependencies matters
 

@@ -68,10 +68,10 @@ dsh plugin --profile <你的 profile> add <本目录绝对路径>
 
 | 源 | 提供 | 不提供 |
 | --- | --- | --- |
-| `opencode.ai/zen/v1/models` | 当前**在售**的模型 id | 价格、上下文 |
+| `opencode.ai/inference/v1/models` | 当前**在售**的模型 id | 价格、上下文 |
 | `models.dev/api.json` | `cost`、`limit.context`、`limit.output` | 是否在售 |
 
-第二个源是必需的——Zen 的 `/v1/models` 只返回 `{ id, object, created, owned_by }`，
+第二个源是必需的——上游的 `/v1/models` 只返回 `{ id, object, created, owned_by }`，
 **无法从它判断某模型是否免费**。
 
 **免费判定**以 models.dev 的 `cost` 为准（`input` 与 `output` 均为 0）。
@@ -80,6 +80,24 @@ dsh plugin --profile <你的 profile> add <本目录绝对路径>
 
 上下文大小与输出上限同样来自 models.dev，所以界面上显示的是真实数值，
 不是某个固定常数。
+
+### 模型目录缓存
+
+两个数据源的稳定性差别很大，因此缓存策略也不同：
+
+| 数据 | 缓存时长 | 为什么 |
+| --- | --- | --- |
+| 在售模型列表 | 5 分钟 | 新模型应该尽快出现在选择器里 |
+| models.dev 价格与限额 | 24 小时 | 极少变动，一天内重算没有意义 |
+
+缓存写在 `~/.cache/dsh-zen-adapter/catalog.db`（与 `dsh-free-search` 的位置约定一致），
+删除该目录即可清空，没有后台任务残留。需要换位置时设置 `ZEN_CACHE_DIR` 环境变量。
+
+这样做带来三个实际效果：
+
+- **启动更快** —— 不再每次拉取 models.dev 那份覆盖所有 provider 的大文件
+- **离线可用** —— 断网启动时仍能列出完整模型列表
+- **「获取模型」仍然是真的刷新** —— 该按钮会绕过缓存真正请求上游，不会被缓存糊弄
 
 ## 为什么零依赖很重要
 
