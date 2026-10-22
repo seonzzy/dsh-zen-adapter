@@ -1,0 +1,83 @@
+# 打了 v* tag 就自动发 Release。
+#
+#   git tag v0.2.1 && git push origin v0.2.1
+#
+# 前提：**workflow 文件必须先在 main 上**，再打 tag。
+# Actions 只监听 push 事件，这个 workflow 是在它被提交到 main 之后才存在的；
+# 先打 tag 再推 workflow，那个 tag 不会触发任何东西。
+#
+# 产物：
+#   · Release 正文 = CHANGELOG.md 里该版本的段落（scripts/release-notes.mjs 抽）
+#   · 一个 .tgz 资产（npm pack 出来的，可直接 dsh plugin add 安装）
+#
+# 为什么要挂 .tgz：GitHub 只对**自己上传的 asset** 计 download_count。
+# 页面右侧自动生成的 "Source code (zip/tar.gz)" 不计入统计，所以挂一个
+# 才能拿到"到底有多少人下载安装"这个数字。
+
+name: release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: 从 CHANGELOG.md 抽取本版本段落
+        run: node scripts/release-notes.mjs "$GITHUB_REF_NAME" > release-notes.md
+
+      - name: 确认 tag 与 package.json 的版本号一致
+        # tag 和 package.json 各自漂移是发布事故的经典来源：tag 写着 v0.2.1，
+        # 打包出来的包却还是 0.2.0，装的人拿到的是旧代码却以为是新版。
+        # 这里直接拦下来。
+        run: |
+          pkg_version="$(node -p "require('./package.json').version")"
+          tag_version="${GITHUB_REF_NAME#v}"
+          if [ "$pkg_version" != "$tag_version" ]; then
+            echo "::error::tag $GITHUB_REF_NAME 与 package.json 版本 $pkg_version 不一致，先把 package.json 改成 $tag_version"
+            exit 1
+          fi
+
+      - name: 确认 CHANGELOG 里真的有这个版本
+        # 抽不出内容说明 tag 和 CHANGELOG 不同步（比如改了版本号却忘了写段落）。
+        # 这时宁可不发，也不要发一个空正文的 Release。
+        run: |
+          if [ ! -s release-notes.md ]; then
+            echo "::error::CHANGELOG.md 里没有 $GITHUB_REF_NAME 的段落，终止发布"
+            exit 1
+          fi
+
+      - name: 打包
+        run: npm pack --pack-destination dist
+
+      - name: 发布 Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
+            echo "Release $GITHUB_REF_NAME 已存在，改为更新正文与资产"
+            gh release edit "$GITHUB_REF_NAME" --notes-file release-notes.md
+            gh release upload "$GITHUB_REF_NAME" dist/*.tgz --clobber
+          else
+            gh release create "$GITHUB_REF_NAME" \
+              --title "$GITHUB_REF_NAME" \
+              --notes-file release-notes.md \
+              --verify-tag \
+              dist/*.tgz
+          fi
+
+      - name: 打印链接
+        run: echo "https://github.com/seonzzy/dsh-zen-adapter/releases/tag/$GITHUB_REF_NAME"

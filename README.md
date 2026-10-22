@@ -18,10 +18,18 @@
 - **可用性检测** — 区分「目录里在售」和「这台机器真的能调通」，避免选到用不了的模型
 - **可视化面板** — 在插件详情页一键获取模型、检测可用性，并查看上下文大小
 
+## 版本
+
+- **当前版本：v0.2.0** — 完整变更见 [Releases](https://github.com/seonzzy/dsh-zen-adapter/releases)
+- ⚠️ **v0.1.0 与 v0.1.1 完全不可用**（每个请求 403 / 每轮 PI_AI_ERROR）。没有需要迁移的配置，直接用 v0.2.0 即可
+- 上游的免费通道是未公开行为，随时可能变化；模型能不能用请以面板里的「检测可用性」为准
+
 ## 安装
 
 ```powershell
 dsh plugin --profile <你的 profile> add github:seonzzy/dsh-zen-adapter
+# 或锁到具体版本（推荐，避免自动跟到未验证的 main）：
+dsh plugin --profile <你的 profile> add github:seonzzy/dsh-zen-adapter#v0.2.0
 # 或从本地目录安装：
 dsh plugin --profile <你的 profile> add <本目录绝对路径>
 ```
@@ -137,6 +145,13 @@ OpenCode 的免费通道**按 IP 计配额**，部分模型还有**地区限制*
 | `PROVIDER_ID` | `zen-free` | 在 DSH 中显示的 provider id |
 | `SEED_MODELS` | 3 个模型 | 目录拉取完成前的占位列表 |
 | 目录刷新间隔 | 30 分钟 | 见 `lib/index.js` 中的 `refreshTimer` |
+
+## 问题反馈
+
+遇到问题请开 issue：<https://github.com/seonzzy/dsh-zen-adapter/issues/new>
+
+提问前建议先搜一下已有 issue——上游行为变化引起的报错（`403`、`429`、模型突然消失）
+多半已经有人遇到过，答案也在那里。
 
 ## 卸载
 

@@ -22,10 +22,21 @@ English | [简体中文](README.md)
 - **Built-in panel** — fetch the catalog and check reachability from the plugin's detail page,
   including context sizes
 
+## Versions
+
+- **Current release: v0.2.0** — see [Releases](https://github.com/seonzzy/dsh-zen-adapter/releases)
+  for the full changelog
+- ⚠️ **v0.1.0 and v0.1.1 are completely unusable** (every request 403 / every turn PI_AI_ERROR).
+  There is nothing to migrate — go straight to v0.2.0
+- The upstream free lane is undocumented behaviour and may change at any time; trust the
+  **检测可用性** button over the catalog listing
+
 ## Installation
 
 ```powershell
 dsh plugin --profile <your profile> add github:seonzzy/dsh-zen-adapter
+# or pin an exact release (recommended — avoids tracking an unverified main):
+dsh plugin --profile <your profile> add github:seonzzy/dsh-zen-adapter#v0.2.0
 # or install from a local directory:
 dsh plugin --profile <your profile> add <absolute path to this directory>
 ```
@@ -151,6 +162,14 @@ the top of `lib/index.js`:
 | `PROVIDER_ID` | `zen-free` | The provider id shown in DSH |
 | `SEED_MODELS` | 3 models | Placeholder list used until the catalog has been fetched |
 | Catalog refresh interval | 30 minutes | See `refreshTimer` in `lib/index.js` |
+
+## Reporting issues
+
+Please open an issue: <https://github.com/seonzzy/dsh-zen-adapter/issues/new>
+
+Search the existing issues first — errors caused by upstream behaviour changes
+(`403`, `429`, models disappearing) have usually been hit by someone else already,
+and the answer is there too.
 
 ## Uninstall
 
